@@ -1,0 +1,385 @@
+﻿@{
+    ViewBag.Title = "Diet Details";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .container-fluid {
+        padding: 20px;
+    }
+
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+
+    .form-control, .btn {
+        border-radius: 8px;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+    .table-container {
+        display: none;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    #reader {
+        width: 300px;
+        margin: auto;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-end mb-3">
+        <select id="languageSelect" class="form-select w-auto">
+            <option value="en">English</option>
+            <option value="te">తెలుగు</option>
+            <option value="ta">தமிழ்</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="hi">हिन्दी</option>
+        </select>
+    </div>
+
+    <div class="card p-4">
+        <h4 class="mb-3 text-center"><i class="fa fa-utensils"></i> <span data-lang="title">Diet Details</span></h4>
+
+        <div class="row">
+            <div class="col-md-4 col-sm-6">
+                <div class="form-group">
+                    <label><span data-lang="app_no">Application No</span> <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="qrInput" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100" id="scanBtn">
+                    <i class="fa fa-qrcode"></i> <span data-lang="scan">SCAN</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Icons for Options -->
+        <div class="row mt-3" id="iconContainer" style="display: none;">
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light d-flex flex-column align-items-center p-3" onclick="fetchData('diet', 'today')">
+                    <i class="fas fa-utensils fa-2x text-primary"></i>
+                    <p class="mb-0"><span data-lang="diet_today"> Today</span></p>
+                </button>
+            </div>
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light d-flex flex-column align-items-center p-3" onclick="fetchData('diet', 'tomorrow')">
+                    <i class="fas fa-utensils fa-2x text-success"></i>
+                    <p class="mb-0"><span data-lang="diet_tomorrow"> Tomorrow</span></p>
+                </button>
+            </div>
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light d-flex flex-column align-items-center p-3" onclick="fetchData('treatment', 'today')">
+                    <i class="fas fa-kit-medical fa-2x text-danger"></i>
+                    <p class="mb-0"><span data-lang="treatment_today">Today</span></p>
+                </button>
+            </div>
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light d-flex flex-column align-items-center p-3" onclick="fetchData('treatment', 'tomorrow')">
+                    <i class="fas fa-kit-medical fa-2x text-info"></i>
+                    <p class="mb-0"><span data-lang="treatment_tomorrow">Tomorrow</span></p>
+                </button>
+            </div>
+        </div>
+
+
+
+        <!-- Diet Information Table -->
+        <div class="table-container mt-4">
+            <div class="card p-3">
+                <h5 class="text-center"><span data-lang="info">Diet Information</span></h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center" id="dietTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>SNo</th>
+                                <th data-lang="name">Name</th>
+                                <th data-lang="time">Time</th>
+                                <th data-lang="QTY">Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Treatment Information Table -->
+        <div class="table-container mt-4">
+            <div class="card p-3">
+                <h5 class="text-center"><span data-lang="info">Treatment Information</span></h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center" id="treatmentTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>SNo</th>
+                                <th data-lang="name">Name</th>
+                                <th data-lang="time">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="scannerModal" class="modal fade" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">QR Scanner</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div id="reader"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+
+
+        <script>
+            const translations = {
+                en: {
+                    title: "Diet Details",
+                    app_no: "Application No",
+                    scan: "SCAN",
+                    info: "Information",
+                    name: "Name",
+                    time: "Time",
+                    select_option: "Select an Option",
+                    choose_details: "Choose the details to view:",
+                    diet_today: "Diet - Today",
+                    diet_tomorrow: "Diet - Tomorrow",
+                    treatment_today: "Treatment - Today",
+                    treatment_tomorrow: "Treatment - Tomorrow"
+                },
+                te: {
+                    title: "ఆహార వివరాలు",
+                    app_no: "అప్లికేషన్ నెం",
+                    scan: "స్కాన్",
+                    info: "సమాచారం",
+                    name: "పేరు",
+                    time: "సమయం",
+                    select_option: "ఒక ఎంపికను ఎంచుకోండి",
+                    choose_details: "చూడటానికి వివరాలను ఎంచుకోండి:",
+                    diet_today: "ఆహారం - ఈ రోజు",
+                    diet_tomorrow: "ఆహారం - రేపు",
+                    treatment_today: "చికిత్స - ఈ రోజు",
+                    treatment_tomorrow: "చికిత్స - రేపు"
+                },
+                ta: {
+                    title: "உணவு விவரங்கள்",
+                    app_no: "விண்ணப்ப எண்",
+                    scan: "ஸ்கேன்",
+                    info: "தகவல்",
+                    name: "பெயர்",
+                    time: "நேரம்",
+                    select_option: "ஒரு விருப்பத்தை தேர்ந்தெடுக்கவும்",
+                    choose_details: "விவரங்களைப் பார்க்க தேர்வுசெய்க:",
+                    diet_today: "உணவு - இன்று",
+                    diet_tomorrow: "உணவு - நாளை",
+                    treatment_today: "சிகிச்சை - இன்று",
+                    treatment_tomorrow: "சிகிச்சை - நாளை"
+                },
+                kn: {
+                    title: "ಆಹಾರ ವಿವರಗಳು",
+                    app_no: "ಅರ್ಜಿ ಸಂಖ್ಯೆ",
+                    scan: "ಸ್ಕ್ಯಾನ್",
+                    info: "ಮಾಹಿತಿ",
+                    name: "ಹೆಸರು",
+                    time: "ಸಮಯ",
+                    select_option: "ಆಯ್ಕೆ ಮಾಡು",
+                    choose_details: "ವಿವರಗಳನ್ನು ನೋಡಲು ಆಯ್ಕೆಮಾಡಿ:",
+                    diet_today: "ಆಹಾರ - ಇಂದು",
+                    diet_tomorrow: "ಆಹಾರ - ನಾಳೆ",
+                    treatment_today: "ಚಿಕಿತ್ಸೆ - ಇಂದು",
+                    treatment_tomorrow: "ಚಿಕಿತ್ಸೆ - ನಾಳೆ"
+                },
+                hi: {
+                    title: "आहार विवरण",
+                    app_no: "आवेदन संख्या",
+                    scan: "स्कैन",
+                    info: "जानकारी",
+                    name: "नाम",
+                    time: "समय",
+                    select_option: "एक विकल्प चुनें",
+                    choose_details: "देखने के लिए विवरण चुनें:",
+                    diet_today: "आहार - आज",
+                    diet_tomorrow: "आहार - कल",
+                    treatment_today: "इलाज - आज",
+                    treatment_tomorrow: "इलाज - कल"
+                }
+            };
+
+            function changeLanguage(lang) {
+                document.querySelectorAll("[data-lang]").forEach(element => {
+                    let key = element.getAttribute("data-lang");
+                    if (translations[lang] && translations[lang][key]) {
+                        element.innerText = translations[lang][key];
+                    }
+                });
+            }
+
+            document.getElementById("languageSelect").addEventListener("change", function () {
+                changeLanguage(this.value);
+            });
+
+            changeLanguage("en");
+            let scanner;
+
+            $(document).ready(function () {
+                let scanner = null; 
+
+                $("#qrInput").on("input", function () {
+                    let inputValue = $(this).val().trim();
+                    $('#iconContainer').toggle(inputValue.length > 0);
+                });
+
+                
+                $("#scanBtn").click(function () {
+                    $("#scannerModal").modal("show");
+                    startScanner();
+                });
+
+                
+                $("#closeScanner, .btn-close").click(function () {
+                    $("#scannerModal").modal("hide");
+                    stopScanner();
+                });
+
+                function startScanner() {
+                    if (!scanner) {
+                        scanner = new Html5Qrcode("reader");
+                    }
+
+                    scanner.start(
+                        { facingMode: "environment" }, 
+                        { fps: 10, qrbox: 250 },
+                        function (decodedText) {
+                            $("#qrInput").val(decodedText);
+                            $("#scannerModal").modal("hide");
+                            stopScanner();
+
+                            
+                            $("#iconContainer").fadeIn();
+                        },
+                        function (error) {
+                            console.warn(`QR Scan Error: ${error}`);
+                        }
+                    ).catch(err => {
+                        alert("Camera access denied or unavailable. Please check your browser settings.");
+                    });
+                }
+
+                function stopScanner() {
+                    if (scanner) {
+                        scanner.stop().then(() => {
+                            console.log("Scanner stopped");
+                        }).catch(err => {
+                            console.log("Error stopping scanner: ", err);
+                        });
+                    }
+                }
+            });
+
+            
+            function fetchData(type, dateType) {
+                let ptCode = $("#qrInput").val().trim();
+                if (!ptCode) {
+                    alert("Please enter an Application No or scan QR Code.");
+                    return;
+                }
+
+                let today = new Date();
+                let orderDate = dateType === "today"
+                    ? today.toISOString().split('T')[0]
+                    : new Date(today.setDate(today.getDate() + 1)).toISOString().split('T')[0];
+
+                let url = (type === "diet")
+                    ? '/Home/GetDietScheduleActivitiesList'
+                    : '/Home/GetPatientSchedule';
+
+                let tableId = (type === "diet") ? "#dietTable" : "#treatmentTable";
+                let otherTableId = (type === "diet") ? "#treatmentTable" : "#dietTable";
+
+                let tableBody = $(tableId + " tbody").empty().append(`<tr><td colspan="4">Loading...</td></tr>`);
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    data: { appId: ptCode, date: orderDate },
+                    dataType: 'json',
+                    success: function (data) {
+                        console.log("Response Data:", data);
+                        tableBody.empty();
+
+                        if (data.length > 0) {
+                            $(".table-container").hide();
+
+                            $.each(data, function (index, item) {
+                                let cleanActivity = item.Activity.replace(/\(\s*\d+\s*\)/g, "").trim();
+                                let timeLabel = item.Time || "N/A";
+
+                                let row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${cleanActivity}</td>`;
+
+                                if (type !== "treatment") {
+                                    row += `<td>${item.Type}</td>`;
+                                }
+
+                                row += `<td>${timeLabel}</td></tr>`;
+                                tableBody.append(row);
+                            });
+
+                            $(tableId).closest(".table-container").show();
+                            $(otherTableId).closest(".table-container").hide();
+
+                            setTimeout(function () {
+                                $(".table-container").fadeOut();
+                                $("#qrInput").val("");
+                                $('#iconContainer').fadeOut();
+                            }, 20000);
+                        } else {
+                            $(".table-container").hide();
+                            alert("No details found.");
+                        }
+                    },
+                    error: function (xhr) {
+                        alert("Failed to fetch details. Error: " + xhr.responseText);
+                    }
+                });
+            }
+
+        </script>
+    </div>
+</div>

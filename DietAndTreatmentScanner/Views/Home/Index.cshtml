@@ -1,0 +1,374 @@
+﻿@{
+    ViewBag.Title = "Diet Details";
+}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-control, .btn {
+        border-radius: 8px;
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+    .table-container {
+        display: none;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    #reader {
+        width: 100%;
+    }
+
+    @@media (max-width: 576px) {
+        .form-label {
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .table th, .table td {
+            font-size: 0.75rem;
+            border: 1px solid #000;
+            color: #000;
+            background-color: transparent;
+        }
+
+        .card h4, .card h5 {
+            font-size: 1.1rem;
+        }
+
+        #iconContainer .btn {
+            padding: 1rem 0.5rem;
+        }
+
+        #iconContainer i {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <div class="card p-3">
+        <h4 class="mb-3 text-center"><i class="fa fa-utensils"></i> Daily Details</h4>
+
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label">Application No <span class="text-danger">*</span></label>
+                <input type="text" id="qrInput" class="form-control" autocomplete="off" />
+            </div>
+            <div class="col-12 col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-success w-100" id="scanBtn">
+                    <i class="fa fa-qrcode"></i> SCAN
+                </button>
+            </div>
+        </div>
+
+        <div class="row mt-4 g-2" id="iconContainer" style="display: none;">
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light w-100 h-100" onclick="fetchData('diet','today')">
+                    <i class="fas fa-utensils fa-2x text-primary mb-1"></i><br>
+                    Diet - Today
+                </button>
+            </div>
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light w-100 h-100" onclick="fetchData('diet','tomorrow')">
+                    <i class="fas fa-utensils fa-2x text-success mb-1"></i><br>
+                    Diet - Tomorrow
+                </button>
+            </div>
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light w-100 h-100" onclick="fetchData('treatment','today')">
+                    <i class="fas fa-kit-medical fa-2x text-danger mb-1"></i><br>
+                    Treatment - Today
+                </button>
+            </div>
+            <div class="col-6 col-md-3 text-center">
+                <button class="btn btn-light w-100 h-100" onclick="fetchData('treatment','tomorrow')">
+                    <i class="fas fa-kit-medical fa-2x text-info mb-1"></i><br>
+                    Treatment - Tomorrow
+                </button>
+            </div>
+        </div>
+
+        <!-- Diet Table -->
+        <div class="table-container mt-4" id="dietContainer">
+            <div class="card p-2">
+                <h5 class="text-center">Diet Information</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center" id="dietTable">
+                        <thead class="">
+                            <tr>
+                                <th>SNo</th>
+                                <th>Name</th>
+                                <th>Time</th>
+                                <th>Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Treatment Table -->
+        <div class="table-container mt-4" id="treatmentContainer">
+            <div class="card p-2">
+                <h5 class="text-center">Treatment Information</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped text-center" id="treatmentTable">
+                        <thead class="">
+                            <tr>
+                                <th>SNo</th>
+                                <th>Name</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Scanner Modal -->
+        <div id="scannerModal" class="modal fade">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">QR Scanner</h5>
+                        <button class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div id="reader"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Close & Print Buttons -->
+        <div class="text-center mt-3" id="actionButtons" style="display:none;">
+            <button id="printBtn" class="btn btn-primary me-2">
+                <i class="fa fa-print"></i> Print
+            </button>
+            <button id="closeBtn" class="btn btn-danger">
+                <i class="fa fa-times"></i> Close
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script>
+    let scanner, timeoutId;
+
+    $(function () {
+        $("#qrInput").on("input", function () {
+            $('#iconContainer').toggle($(this).val().trim().length > 0);
+        });
+
+        $("#scanBtn").click(() => {
+            $("#scannerModal").modal("show");
+            scanner = new Html5Qrcode("reader");
+            scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+                text => {
+                    $("#qrInput").val(text);
+                    $("#scannerModal").modal("hide");
+                    scanner.stop();
+                    $("#iconContainer").fadeIn();
+                },
+                err => console.warn("QR Error: ", err)
+            ).catch(() => alert("Camera error. Check permission."));
+        });
+
+        $(".btn-close, #closeBtn").click(() => location.reload());
+    });
+
+    function fetchData(type, when) {
+        const ptCode = $("#qrInput").val().trim();
+        if (!ptCode) return alert("Please enter Application No.");
+
+        const date = new Date();
+        if (when === "tomorrow") date.setDate(date.getDate() + 1);
+        const orderDate = date.toISOString().split('T')[0];
+
+        const url = (type === "diet") ? "/Home/GetDietScheduleActivitiesList" : "/Home/GetPatientSchedule";
+        const tableId = (type === "diet") ? "#dietTable" : "#treatmentTable";
+        const containerId = (type === "diet") ? "#dietContainer" : "#treatmentContainer";
+        const otherContainer = (type === "diet") ? "#treatmentContainer" : "#dietContainer";
+
+        const $tbody = $(tableId + " tbody").empty().append(`<tr><td colspan="4">Loading...</td></tr>`);
+
+        $.ajax({
+            url,
+            type: "GET",
+            data: { appId: ptCode, date: orderDate },
+            dataType: "json",
+            success: function (data) {
+                $tbody.empty();
+                if (data.length > 0) {
+                    data.forEach((item, i) => {
+                        const activity = item.Activity?.replace(/\(\d+\)/g, "").trim() || "N/A";
+                        let row = `<tr><td>${i + 1}</td><td>${activity}</td>`;
+                        row += (type === "diet") ?
+                            `<td>${item.Type || "N/A"}</td><td>${item.Time || "N/A"}</td>` :
+                            `<td>${item.Time || "N/A"}</td>`;
+                        row += "</tr>";
+                        $tbody.append(row);
+                    });
+
+                    $(".table-container").hide();
+                    $(containerId).fadeIn();
+                    $(otherContainer).hide();
+                    $("#iconContainer, #actionButtons").fadeIn();
+
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        $(".table-container, #iconContainer").fadeOut();
+                        $("#qrInput").val("");
+                        $("#actionButtons").fadeOut();
+                    }, 20000);
+                } else {
+                    $(".table-container").hide();
+                    alert("No details found.");
+                }
+            },
+            error: xhr => alert("Fetch error: " + xhr.responseText)
+        });
+    }
+  $("#printBtn").click(() => {
+    let dataRows = [];
+    let headers = [];
+
+    if ($("#dietContainer").is(":visible")) {
+        headers = ["SNo", "Name", "Time", "Qty"];
+        $("#dietTable tbody tr").each(function () {
+            const cells = $(this).find("td").map((i, el) => $(el).text().trim()).get();
+            dataRows.push(cells);
+        });
+    } else if ($("#treatmentContainer").is(":visible")) {
+        headers = ["SNo", "Name", "Time"];
+        $("#treatmentTable tbody tr").each(function () {
+            const cells = $(this).find("td").map((i, el) => $(el).text().trim()).get();
+            dataRows.push(cells);
+        });
+    } else {
+        alert("No data to print.");
+        return;
+    }
+
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-GB');
+    const formattedTime = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+
+    const newTable = `
+        <table>
+            <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>
+                ${dataRows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+        </table>`;
+
+    const printContent = `
+        <html>
+        <head>
+            <title>Token Receipt</title>
+            <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+            <style>
+                * {
+                    box-sizing: border-box;
+                }
+                @@page {
+                    size: 70mm auto;
+                    margin: 0;
+                }
+                html, body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 70mm;
+                    font-family: 'Poppins', sans-serif;
+                    font-size: 10px;
+                    background: #fff;
+                }
+                .receipt {
+                    width: 100%;
+                    padding: 0;
+                    margin: 0;
+                    text-align: center;
+                }
+                .receipt-header {
+                    font-size: 14px;
+                    font-weight: bold;
+                    margin-bottom: 3px;
+                }
+                .datetime {
+                    font-size: 10px;
+                    margin-bottom: 4px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 10px;
+                    table-layout: fixed;
+                }
+                th, td {
+                    border: 1px solid #000;
+                    padding: 2px;
+                    text-align: center;
+                    word-wrap: break-word;
+                }
+                th {
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="datetime">Date: ${formattedDate} | Time: ${formattedTime}</div>
+                ${newTable}
+            </div>
+        </body>
+        </html>`;
+
+    const originalContent = document.body.innerHTML;
+    document.body.innerHTML = printContent;
+
+    window.print();
+
+    setTimeout(() => {
+        document.body.innerHTML = originalContent;
+        location.reload();
+    }, 1000);
+});
+</script>
