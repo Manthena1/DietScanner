@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Diet Details";
 }
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
@@ -263,44 +263,46 @@
             error: xhr => alert("Fetch error: " + xhr.responseText)
         });
     }
-  $("#printBtn").click(() => {
-    let dataRows = [];
-    let headers = [];
+    $("#printBtn").click(() => {
+        let dataRows = [];
+        let headers = [];
 
-    if ($("#dietContainer").is(":visible")) {
-        headers = ["SNo", "Name", "Time", "Qty"];
-        $("#dietTable tbody tr").each(function () {
-            const cells = $(this).find("td").map((i, el) => $(el).text().trim()).get();
-            dataRows.push(cells);
+        if ($("#dietContainer").is(":visible")) {
+            headers = ["SNo", "Name", "Time", "Qty"];
+            $("#dietTable tbody tr").each(function () {
+                const cells = $(this).find("td").map((i, el) => $(el).text().trim()).get();
+                dataRows.push(cells);
+            });
+        } else if ($("#treatmentContainer").is(":visible")) {
+            headers = ["SNo", "Name", "Time"];
+            $("#treatmentTable tbody tr").each(function () {
+                const cells = $(this).find("td").map((i, el) => $(el).text().trim()).get();
+                dataRows.push(cells);
+            });
+        } else {
+            alert("No data to print.");
+            return;
+        }
+
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('en-GB');
+        const formattedTime = now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
         });
-    } else if ($("#treatmentContainer").is(":visible")) {
-        headers = ["SNo", "Name", "Time"];
-        $("#treatmentTable tbody tr").each(function () {
-            const cells = $(this).find("td").map((i, el) => $(el).text().trim()).get();
-            dataRows.push(cells);
-        });
-    } else {
-        alert("No data to print.");
-        return;
-    }
 
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('en-GB');
-    const formattedTime = now.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
-
-    const newTable = `
+        const newTable = `
         <table>
-            <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <thead>
+                <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            </thead>
             <tbody>
                 ${dataRows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
             </tbody>
         </table>`;
 
-    const printContent = `
+        const printContent = `
         <html>
         <head>
             <title>Token Receipt</title>
@@ -315,7 +317,7 @@
                 }
                 html, body {
                     margin: 0 !important;
-                    padding: 0 !important;
+                    padding: 0;
                     width: 70mm;
                     font-family: 'Poppins', sans-serif;
                     font-size: 10px;
@@ -323,14 +325,9 @@
                 }
                 .receipt {
                     width: 100%;
-                    padding: 0;
+                    padding: 0 3mm;
                     margin: 0;
                     text-align: center;
-                }
-                .receipt-header {
-                    font-size: 14px;
-                    font-weight: bold;
-                    margin-bottom: 3px;
                 }
                 .datetime {
                     font-size: 10px;
@@ -340,7 +337,7 @@
                     width: 100%;
                     border-collapse: collapse;
                     font-size: 10px;
-                    table-layout: fixed;
+                    table-layout: auto; /* Let the browser adjust */
                 }
                 th, td {
                     border: 1px solid #000;
@@ -350,6 +347,17 @@
                 }
                 th {
                     font-weight: bold;
+                }
+
+                /* Only force SNo and Time to be small */
+                th:first-child,
+                td:first-child {
+                    width: 10%; /* SNo column */
+                }
+                th:nth-child(3),
+                td:nth-child(3) {
+                    max-width: 20%; /* Time column - only limit max */
+                    white-space: nowrap;
                 }
             </style>
         </head>
@@ -361,14 +369,15 @@
         </body>
         </html>`;
 
-    const originalContent = document.body.innerHTML;
-    document.body.innerHTML = printContent;
+        const originalContent = document.body.innerHTML;
+        document.body.innerHTML = printContent;
 
-    window.print();
+        window.print();
 
-    setTimeout(() => {
-        document.body.innerHTML = originalContent;
-        location.reload();
-    }, 1000);
-});
+        setTimeout(() => {
+            document.body.innerHTML = originalContent;
+            location.reload();
+        }, 1000);
+    });
+
 </script>
